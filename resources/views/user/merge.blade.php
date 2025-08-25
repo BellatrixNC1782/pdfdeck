@@ -11,8 +11,8 @@
     <!-- Upload -->
     <div class="flex justify-center mb-10">
         <label for="fileInput"
-               class="cursor-pointer border-2 border-dashed border-gray-300 rounded-2xl px-10 py-8 flex flex-col items-center hover:border-red-500 hover:bg-red-50 transition">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-red-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+               class="cursor-pointer border-2 border-dashed border-gray-300 rounded-2xl px-10 py-8 flex flex-col items-center hover:border-yellow-500 hover:bg-yellow-50 transition">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-yellow-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>
             <span class="text-gray-600 font-medium">Click or drag & drop PDFs here</span>
@@ -37,7 +37,7 @@
             <input type="hidden" name="file_rotations" id="fileRotations">
             <input type="file" name="pdfs[]" id="finalInput" multiple hidden>
 
-            <button type="submit" id="mergeBtn" class="px-8 py-4 bg-red-600 text-white text-lg font-semibold rounded-full shadow-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+            <button type="submit" id="mergeBtn" class="px-8 py-4 bg-yellow-600 text-white text-lg font-semibold rounded-full shadow-lg hover:bg-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                 Merge & Download
             </button>
         </form>
@@ -91,7 +91,7 @@ function renderPreviews() {
 
         const closeBtn = document.createElement('button');
         closeBtn.innerHTML = "✕";
-        closeBtn.className = "bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center shadow";
+        closeBtn.className = "bg-yellow-500 hover:bg-yellow-600 text-white rounded-full w-6 h-6 flex items-center justify-center shadow";
         closeBtn.onclick = () => {
             files.splice(index, 1);
             rotations.splice(index, 1);
@@ -200,6 +200,9 @@ sortZA.addEventListener('click', () => {
 });
 
 document.getElementById('mergeForm').addEventListener('submit', () => {
+    // Show loader
+    document.getElementById('loaderOverlay').classList.remove('hidden');
+    
     const dt = new DataTransfer();
     files.forEach(f => dt.items.add(f));
     finalInput.files = dt.files;
@@ -214,7 +217,8 @@ document.getElementById('mergeForm').addEventListener('submit', () => {
         finalInput.value = '';
         previewArea.innerHTML = '';
         updateMergeButtonState();
-    }, 1500); // wait for download to trigger
+        document.getElementById("loaderOverlay").classList.add("hidden");
+    }, 2000);
 });
 function updateMergeButtonState() {
     const mergeBtn = document.getElementById('mergeBtn');

@@ -20,7 +20,12 @@ class PdfToImageController extends Controller {
         ]);
 
         $rotateData = $request->input('rotate', []);
-        $files = $request->file('pdfs');
+        $files = $request->file('pdfs', []);
+
+        if (!is_array($files)) {
+            $files = $files ? [$files] : [];
+        }
+
         $tempDir = storage_path('app/temp/' . Str::random(10));
         mkdir($tempDir, 0755, true);
 

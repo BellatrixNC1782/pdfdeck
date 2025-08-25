@@ -1,32 +1,40 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-5xl mx-auto px-4">
-    <h2 class="text-3xl font-semibold text-center mt-6 mb-4">Rotate PDF</h2>
-
-    @if ($errors->has('pdfs'))
-    <div class="text-red-500 text-sm mt-2">
-        {{ $errors->first('pdfs') }}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="text-center mb-8">
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-800">Rotate PDF</h2>
+        <p class="text-gray-500 mt-2">Upload, preview, rotate and download your PDFs</p>
     </div>
-    @endif
 
     <!-- Upload -->
-    <div class="flex flex-col items-center">
-        <input type="file" id="fileInput" multiple accept=".pdf"
-               class="mb-6 block max-w-md text-sm border rounded file:bg-blue-600 file:text-white file:px-4 file:py-2">
+    <div class="flex justify-center mb-10">
+        <label for="fileInput"
+               class="cursor-pointer border-2 border-dashed border-gray-300 rounded-2xl px-10 py-8 flex flex-col items-center hover:border-emerald-500 hover:bg-emerald-50 transition">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-emerald-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            <span class="text-gray-600 font-medium">Click or drag & drop PDFs here</span>
+            <input type="file" id="fileInput" multiple accept=".pdf" class="hidden">
+        </label>
     </div>
 
-    <!-- Previews -->
-    <div id="previewArea" class="grid grid-cols-2 md:grid-cols-3 gap-6 mb-8"></div>
+    <!-- Preview Area -->
+    <div id="previewArea" class="flex flex-wrap gap-4 justify-center"></div>
 
-    <!-- Rotate Button -->
-    <div class="text-center">
+    <!-- Rotate & Download Button -->
+    <div class="text-center mt-10">
         <form id="rotateForm" method="POST" action="{{ route('downloadrotatepdf') }}" enctype="multipart/form-data">
             @csrf
             <input type="hidden" name="file_names_order" id="fileNamesOrder">
             <input type="hidden" name="file_rotations" id="fileRotations">
             <input type="file" name="pdfs[]" id="finalInput" multiple hidden>
-            <button type="submit" id="rotateBtn" class="bg-red-600 text-white px-6 py-3 rounded-full hover:bg-red-700" disabled>Rotate & Download</button>
+            <button type="submit" id="rotateBtn"
+                    class="px-8 py-4 bg-emerald-600 text-white text-lg font-semibold rounded-full shadow-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled>
+                Rotate & Download
+            </button>
         </form>
     </div>
 </div>
@@ -60,68 +68,90 @@ fileInput.addEventListener('change', (e) => {
 });
 
 function renderPreviews(files) {
-    const previewArea = document.getElementById('previewArea');
     previewArea.innerHTML = '';
 
     Array.from(files).forEach((file, index) => {
-        const div = document.createElement('div');
-        div.className = 'p-4 bg-white rounded shadow-md flex flex-col items-center justify-center w-[360px] mx-auto mb-4';
+        const card = document.createElement('div');
+        card.className = "relative bg-white rounded-2xl shadow-md w-52 p-4 flex flex-col items-center justify-between";
+        card.dataset.index = index;
 
-        const fileName = document.createElement('p');
-        fileName.textContent = file.name;
-        fileName.className = 'text-sm mb-2 break-words text-center max-w-full';
+        // Top bar with close button
+        const topBar = document.createElement('div');
+        topBar.className = "absolute top-2 right-2";
 
-        const canvasWrapper = document.createElement('div');
-        canvasWrapper.className = 'relative w-[300px] h-[400px] border rounded overflow-hidden flex items-center justify-center bg-gray-100';
-
-        const canvas = document.createElement('canvas');
-        canvas.className = 'max-w-full max-h-full object-contain transition-transform duration-300 ease-in-out';
-        canvasWrapper.appendChild(canvas);
-
-        const rotateBtn = document.createElement('button');
-        rotateBtn.innerHTML = '⟳ 0°';
-        rotateBtn.className = 'bg-yellow-500 text-white px-3 py-1 mt-3 rounded';
-        rotateBtn.onclick = () => {
-            rotations[index] = (rotations[index] + 90) % 360;
-            rotateBtn.innerHTML = `⟳ ${rotations[index]}°`;
-            canvas.style.transform = `rotate(${rotations[index]}deg)`;
-            updateHiddenRotations();
-        };
-
-        const removeBtn = document.createElement('button');
-        removeBtn.innerHTML = '❌';
-        removeBtn.className = 'ml-3 mt-3 text-red-500';
-        removeBtn.onclick = () => {
+        const closeBtn = document.createElement('button');
+        closeBtn.innerHTML = "✕";
+        closeBtn.className = "bg-emerald-500 hover:bg-emerald-600 text-white rounded-full w-6 h-6 flex items-center justify-center shadow";
+        closeBtn.onclick = () => {
             files.splice(index, 1);
             rotations.splice(index, 1);
             renderPreviews(files);
             updateRotateButton();
         };
 
-        div.appendChild(fileName);
-        div.appendChild(canvasWrapper);
-        div.appendChild(rotateBtn);
-        div.appendChild(removeBtn);
-        previewArea.appendChild(div);
+        topBar.appendChild(closeBtn);
+        card.appendChild(topBar);
 
+        // File name
+        const fileName = document.createElement('p');
+        fileName.textContent = file.name;
+        fileName.className = "text-xs mt-1 mb-2 text-gray-600 break-words text-center max-w-full";
+        card.appendChild(fileName);
+
+        // Canvas preview
+        const canvasWrapper = document.createElement('div');
+        canvasWrapper.className = "flex-1 flex items-center justify-center my-2";
+        const canvas = document.createElement('canvas');
+        canvas.className = "max-h-40 object-contain transition-transform duration-300";
+        canvasWrapper.appendChild(canvas);
+        card.appendChild(canvasWrapper);
+
+        // Rotation controls
+        const controls = document.createElement('div');
+        controls.className = "flex justify-center items-center gap-3 mt-2";
+
+        const rotateLeft = document.createElement('button');
+        rotateLeft.innerHTML = "⟲";
+        rotateLeft.className = "bg-gray-800 text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-700";
+        rotateLeft.addEventListener('click', () => {
+            rotations[index] = (rotations[index] - 90 + 360) % 360;
+            canvas.style.transform = `rotate(${rotations[index]}deg)`;
+            degreeLabel.textContent = `${rotations[index]}°`;
+            updateHiddenRotations();
+        });
+
+        const degreeLabel = document.createElement('div');
+        degreeLabel.textContent = "0°";
+        degreeLabel.className = "bg-yellow-400 text-white font-semibold px-2 py-1 rounded-full text-sm";
+
+        const rotateRight = document.createElement('button');
+        rotateRight.innerHTML = "⟳";
+        rotateRight.className = "bg-gray-800 text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-700";
+        rotateRight.addEventListener('click', () => {
+            rotations[index] = (rotations[index] + 90) % 360;
+            canvas.style.transform = `rotate(${rotations[index]}deg)`;
+            degreeLabel.textContent = `${rotations[index]}°`;
+            updateHiddenRotations();
+        });
+
+        controls.appendChild(rotateLeft);
+        controls.appendChild(degreeLabel);
+        controls.appendChild(rotateRight);
+        card.appendChild(controls);
+
+        previewArea.appendChild(card);
+
+        // Render PDF preview (first page)
         const reader = new FileReader();
         reader.onload = function (e) {
             const loadingTask = pdfjsLib.getDocument({ data: e.target.result });
             loadingTask.promise.then(function (pdf) {
                 pdf.getPage(1).then(function (page) {
-                    const viewport = page.getViewport({ scale: 1.0 });
-                    const scale = Math.min(280 / viewport.width, 380 / viewport.height); // Fit canvas inside box
-                    const scaledViewport = page.getViewport({ scale: scale });
-
+                    const viewport = page.getViewport({ scale: 0.5 });
                     const context = canvas.getContext('2d');
-                    canvas.height = scaledViewport.height;
-                    canvas.width = scaledViewport.width;
-
-                    const renderContext = {
-                        canvasContext: context,
-                        viewport: scaledViewport
-                    };
-                    page.render(renderContext);
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+                    page.render({ canvasContext: context, viewport: viewport });
                 });
             });
         };
@@ -131,22 +161,14 @@ function renderPreviews(files) {
     updateHiddenRotations();
 }
 
-function removeFileFromList(fileList, indexToRemove) {
-    const dt = new DataTransfer();
-    Array.from(fileList).forEach((file, index) => {
-        if (index !== indexToRemove) {
-            dt.items.add(file);
-        }
-    });
-    files = Array.from(dt.files);
-    return dt.files;
-}
-
 function updateRotateButton() {
     rotateBtn.disabled = files.length === 0;
 }
 
 document.getElementById('rotateForm').addEventListener('submit', () => {
+    // Show loader immediately
+    document.getElementById("loaderOverlay").classList.remove("hidden");
+
     const dt = new DataTransfer();
     files.forEach(f => dt.items.add(f));
     finalInput.files = dt.files;
@@ -160,7 +182,8 @@ document.getElementById('rotateForm').addEventListener('submit', () => {
         fileInput.value = '';
         previewArea.innerHTML = '';
         updateRotateButton();
-    }, 1500);
+        document.getElementById("loaderOverlay").classList.add("hidden");
+    }, 2000);
 });
 </script>
 @endsection
