@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 class WordToPDFController extends Controller {
 
     public function index(Request $request) {
-        return view('user.word2PDF');
+        return view('user.word2pdf');
     }
 
     public function store(Request $request) {
