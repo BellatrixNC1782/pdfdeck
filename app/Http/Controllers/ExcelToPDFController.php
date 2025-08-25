@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 class ExcelToPDFController extends Controller {
 
     public function index(Request $request) {
-        return view('user.excel2PDF');
+        return view('user.excel2pdf');
     }
 
     public function excelToPdf(Request $request) {
