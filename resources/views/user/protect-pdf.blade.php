@@ -175,6 +175,8 @@ function updateProtectButton() {
 }
 
 protectForm.addEventListener('submit', function (e) {
+    // Show loader immediately
+    document.getElementById("loaderOverlay").classList.remove("hidden");
     e.preventDefault();
 
     if (password.value !== repeatPassword.value || password.value.trim() === "") {
@@ -219,6 +221,7 @@ protectForm.addEventListener('submit', function (e) {
                 previewArea.innerHTML = '';
                 updateProtectButton();
                 location.reload();
+                document.getElementById("loaderOverlay").classList.add("hidden");
             }, 1500);
         });
     })
