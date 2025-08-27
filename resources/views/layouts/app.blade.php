@@ -52,8 +52,7 @@
                     @foreach($menu as $route => $label)
                     <a href="{{ route($route) }}"
                        class="relative pb-1 transition-all duration-200 {{ request()->routeIs($route) 
-                        ? 'text-yellow-400 font-bold after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-full after:bg-yellow-400'
-                        : 'hover:text-yellow-300 after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-0 after:bg-yellow-300 hover:after:w-full after:transition-all after:duration-300' }}">
+                        ? 'border-b-2 border-yellow-400 pb-1 text-yellow-400 font-bold hover:text-yellow-400' : 'hover:text-yellow-400 hover:border-b-2 hover:border-yellow-400 pb-1' }}">
                         {{ $label }}
                     </a>
                     @endforeach

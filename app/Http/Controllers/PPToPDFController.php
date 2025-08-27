@@ -23,18 +23,31 @@ class PPToPDFController extends Controller {
         $baseName = pathinfo($fileName, PATHINFO_FILENAME);
         $pdfPath = storage_path("app/{$baseName}.pdf");
 
-        $command = '"C:\Program Files\LibreOffice\program\soffice.exe" --headless --convert-to pdf --outdir "' . storage_path('app') . '" "' . $pptPath . '"';
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+            $command = '"C:\Program Files\LibreOffice\program\soffice.exe" --headless --convert-to pdf --outdir "' . storage_path('app') . '" "' . $pptPath . '"';
+        } else {
+            $soffice = '/usr/bin/libreoffice';
+            $command = 'HOME=/tmp ' . $soffice
+                    . ' --headless --nologo --convert-to pdf --outdir "'
+                    . storage_path('app') . '" "'
+                    . $pptPath . '"';
+        }
         exec($command . ' 2>&1', $output, $resultCode);
 
+        // Clean up PPT file
         if (file_exists($pptPath)) {
             unlink($pptPath);
         }
 
+        // Check if conversion succeeded
         if (!file_exists($pdfPath)) {
             return back()->with('error', 'Conversion failed. LibreOffice output: ' . implode("\n", $output));
         }
 
-        return response()->download($pdfPath)->deleteFileAfterSend(true);
+        // Return PDF for download
+        return response()->download($pdfPath, $baseName . '.pdf', [
+                    'Content-Type' => 'application/pdf',
+                ])->deleteFileAfterSend(true);
     }
 
 }

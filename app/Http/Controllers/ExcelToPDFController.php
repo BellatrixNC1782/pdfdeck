@@ -3,42 +3,72 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Writer\Pdf\Mpdf as PdfWriter;
+use PhpOffice\PhpSpreadsheet\Style\Border;
 
-class ExcelToPDFController extends Controller {
-
-    public function index(Request $request) {
+class ExcelToPDFController extends Controller
+{
+    public function index(Request $request)
+    {
         return view('user.excel2pdf');
     }
 
-    public function excelToPdf(Request $request) {
+    public function excelToPdf(Request $request)
+    {
         $request->validate([
-            'file' => 'required|mimes:xls,xlsx|max:20480', // Max 20MB
+            'file' => 'required|mimes:xls,xlsx|max:20480',
         ]);
 
         $excelFile = $request->file('file');
-        $fileName = time() . '.' . $excelFile->getClientOriginalExtension();
-        $excelPath = storage_path('app/' . $fileName);
+        $fileName  = time() . '.' . $excelFile->getClientOriginalExtension();
+        $filePath  = storage_path('app/' . $fileName);
         $excelFile->move(storage_path('app'), $fileName);
 
-        $baseName = pathinfo($fileName, PATHINFO_FILENAME);
-        $pdfPath = storage_path("app/{$baseName}.pdf");
+        // Load Excel
+        $spreadsheet = IOFactory::load($filePath);
+        $sheet = $spreadsheet->getActiveSheet();
 
-        // Convert using LibreOffice
-        $command = '"C:\Program Files\LibreOffice\program\soffice.exe" --headless --convert-to pdf --outdir "' . storage_path('app') . '" "' . $excelPath . '"';
-        exec($command . ' 2>&1', $output, $resultCode);
+        // Add borders (gridlines)
+        $range = $sheet->calculateWorksheetDimension();
+        $sheet->getStyle($range)->applyFromArray([
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                ],
+            ],
+        ]);
 
-        // Delete Excel file
-        if (file_exists($excelPath)) {
-            unlink($excelPath);
-        }
+        // Detect number of columns
+        $highestColumn = $sheet->getHighestColumn();
+        $colCount = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestColumn);
 
-        // Check for output
-        if (!file_exists($pdfPath)) {
-            return back()->with('error', 'Conversion failed. LibreOffice output: ' . implode("\n", $output));
-        }
+        // Set page orientation based on number of columns
+        $orientation = $colCount > 8 ? 'landscape' : 'portrait';
+        $sheet->getPageSetup()->setOrientation(
+            $orientation === 'landscape'
+                ? \PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_LANDSCAPE
+                : \PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_PORTRAIT
+        );
 
-        // Download and auto-delete after
-        return response()->download($pdfPath)->deleteFileAfterSend(true);
+        // Set paper size (A4)
+        $sheet->getPageSetup()->setPaperSize(
+            \PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::PAPERSIZE_A4
+        );
+
+        // Save PDF
+        $pdfFileName = pathinfo($fileName, PATHINFO_FILENAME) . '.pdf';
+        $pdfPath = storage_path('app/' . $pdfFileName);
+
+        $writer = new PdfWriter($spreadsheet);
+        $writer->save($pdfPath);
+
+        // Delete original Excel
+        unlink($filePath);
+
+        // Download PDF
+        return response()->download($pdfPath, $pdfFileName, [
+            'Content-Type' => 'application/pdf',
+        ])->deleteFileAfterSend(true);
     }
-
 }
