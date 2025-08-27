@@ -25,21 +25,36 @@ class WordToPDFController extends Controller {
         $pdfName = pathinfo($originalName, PATHINFO_FILENAME) . '.pdf';
         $pdfPath = storage_path('app/' . $pdfName);
 
-        // LibreOffice command
-        $command = '"C:\Program Files\LibreOffice\program\soffice.exe" --headless --convert-to pdf --outdir "' . storage_path('app') . '" "' . $tempPath . '"';
-        exec($command, $output, $resultCode);
+        // Detect OS and build command
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+            // Windows
+            $command = '"C:\Program Files\LibreOffice\program\soffice.exe" --headless --convert-to pdf --outdir "' . storage_path('app') . '" "' . $tempPath . '"';
+            exec($command, $output, $resultCode);
+        } else {
+            // Linux / Ubuntu
+            $soffice = '/usr/bin/libreoffice';
+            $command = 'HOME=/tmp ' . $soffice
+                    . ' --headless --nologo --convert-to pdf --outdir "'
+                    . storage_path('app') . '" "'
+                    . $tempPath . '"';
+            exec($command . ' 2>&1', $output, $resultCode);
+        }
 
         if (!file_exists($pdfPath)) {
-            // Clean up Word file if conversion failed
-            if (file_exists($tempPath))
+            if (file_exists($tempPath)) {
                 unlink($tempPath);
+            }
             return back()->with('error', 'PDF conversion failed.');
         }
 
-        if (file_exists($tempPath))
+        // Delete temp word file
+        if (file_exists($tempPath)) {
             unlink($tempPath);
+        }
 
-        return response()->download($pdfPath)->deleteFileAfterSend(true);
+        // Download PDF
+        return response()->download($pdfPath, $pdfName, [
+            'Content-Type' => 'application/pdf',
+        ])->deleteFileAfterSend(true);
     }
-
 }
