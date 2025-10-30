@@ -20,6 +20,9 @@ use App\Http\Controllers\CropPdfController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
+Route::get('/privacypolicy', [HomeController::class, 'privacypolicy'])->name('privacypolicy');
+Route::get('/termsofuse', [HomeController::class, 'termsofuse'])->name('termsofuse');
+
 Route::get('/mergepdf', [PdfController::class, 'mergePdf'])->name('mergepdf');
 Route::post('/downloadmergepdf', [PdfController::class, 'downloadMergePdf'])->name('downloadmergepdf');
 

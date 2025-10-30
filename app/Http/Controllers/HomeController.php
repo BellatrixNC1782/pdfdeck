@@ -35,5 +35,13 @@ class HomeController extends Controller {
         }
         return view('user.home');
     }
+    
+    public function privacypolicy(){
+        return view('user.privacypolicy.privacypolicy');
+    }
+        
+    public function termsofuse(){
+        return view('user.termsofuse.termsofuse');
+    }
 
 }
