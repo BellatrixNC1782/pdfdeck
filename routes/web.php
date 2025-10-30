@@ -37,10 +37,10 @@ Route::post('/pdf-to-word/run',  [PdfToWordController::class,'run' ])->name('pdf
 Route::get('wordtopdf', [WordToPDFController::class, 'index'])->name('wordtopdf');
 Route::post('word-to-pdf', [WordToPDFController::class, 'store'])->name('word.to.pdf.store');
 
-Route::get('pptppdf', [PPToPDFController::class, 'index'])->name('pptppdf');
+Route::get('ppttopdf', [PPToPDFController::class, 'index'])->name('pptppdf');
 Route::post('/ppt-to-pdf', [PPToPDFController::class, 'pptToPdf'])->name('ppt2pdf');
 
-Route::get('exceltppdf', [ExcelToPDFController::class, 'index'])->name('exceltppdf');
+Route::get('exceltopdf', [ExcelToPDFController::class, 'index'])->name('exceltppdf');
 Route::post('/excel-to-pdf', [ExcelToPDFController::class, 'excelToPdf'])->name('excel2pdf');
 
 Route::get('/edit-pdf', [EditPdfController::class, 'index'])->name('editpdf');

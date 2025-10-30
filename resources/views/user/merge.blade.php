@@ -49,6 +49,39 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
 
 <script>
+    
+const dropArea = document.querySelector('label[for="fileInput"]');
+
+dropArea.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    dropArea.classList.add('border-yellow-500', 'bg-yellow-50'); // show visual cue
+});
+
+dropArea.addEventListener('dragleave', function(e) {
+    e.preventDefault();
+    dropArea.classList.remove('border-yellow-500', 'bg-yellow-50');
+});
+    
+dropArea.addEventListener('drop', function(e) {
+    e.preventDefault();
+    dropArea.classList.remove('border-yellow-500', 'bg-yellow-50');
+    const droppedFiles = e.dataTransfer.files;
+    if (droppedFiles && droppedFiles.length > 0) {
+        Array.from(droppedFiles).forEach(f => {
+            if (f.type !== 'application/pdf' && !f.name.toLowerCase().endsWith('.pdf')) {
+                alert("Invalid file! Only PDF files are allowed.");
+                return;
+            }
+            files.push(f);
+            rotations.push(0);
+        });
+        renderPreviews();
+        updateMergeButtonState();
+    }
+});
+
+
+    
 const fileInput = document.getElementById('fileInput');
 //    const addMoreBtn = document.getElementById('addMoreBtn');
 const finalInput = document.getElementById('finalInput');
@@ -61,15 +94,21 @@ const sortZA = document.getElementById('sortZA');
 let files = [];
 let rotations = [];
 
+
+    
 fileInput.addEventListener('change', (e) => {
-    Array.from(e.target.files).forEach(f => {
+    for (const f of e.target.files) {
+        if (f.type !== 'application/pdf' && !f.name.toLowerCase().endsWith('.pdf')) {
+            alert("Invalid file! Only PDF files are allowed.");
+            continue; // Skip this file
+        }
         files.push(f);
         rotations.push(0);
-    });
+    }
     renderPreviews();
     updateMergeButtonState();
-//        addMoreBtn.classList.remove('hidden');
 });
+
 
 //    addMoreBtn.addEventListener('click', () => fileInput.click());
 function renderPreviews() {

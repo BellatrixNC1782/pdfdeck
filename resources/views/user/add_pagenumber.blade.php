@@ -10,7 +10,7 @@
 
     <!-- Upload -->
     <div class="flex justify-center mb-10">
-        <label for="pdfInput"
+        <label id="dropZone" for="pdfInput"
                class="cursor-pointer border-2 border-dashed border-gray-300 rounded-2xl px-10 py-8 flex flex-col items-center hover:border-purple-500 hover:bg-purple-50 transition">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-purple-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -65,7 +65,46 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
 
 <script>
+    
+    
+const dropZone = document.getElementById('dropZone');
 const pdfInput = document.getElementById('pdfInput');
+
+['dragenter', 'dragover'].forEach(eventName => {
+    dropZone.addEventListener(eventName, e => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.classList.add('border-purple-500', 'bg-purple-50');
+    });
+});
+
+['dragleave', 'drop'].forEach(eventName => {
+    dropZone.addEventListener(eventName, e => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.classList.remove('border-purple-500', 'bg-purple-50');
+    });
+});
+
+dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const droppedFiles = e.dataTransfer.files;
+    if (droppedFiles.length > 0) {
+        for (const file of droppedFiles) {
+            if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+                alert("Invalid file! Only PDF files are allowed.");
+                return;
+            }
+        }
+        pdfInput.files = droppedFiles;
+        pdfInput.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+});
+
+    
+//const pdfInput = document.getElementById('pdfInput');
 const finalPdfInput = document.getElementById('finalPdfInput');
 const previewArea = document.getElementById('previewArea');
 const pdfFileNames = document.getElementById('pdfFileNames');
@@ -73,6 +112,16 @@ const pdfFileNames = document.getElementById('pdfFileNames');
 let pdfFiles = [];
 
 pdfInput.addEventListener('change', (e) => {
+    
+    const filesArray = Array.from(e.target.files);
+    for (const file of filesArray) {
+        if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+            alert("Invalid file! Only PDF files are allowed.");
+            e.target.value = ''; // Reset input field on invalid file
+            return;
+        }
+    }
+    
     Array.from(e.target.files).forEach(f => {
         if (!pdfFiles.some(x => x.name === f.name && x.size === f.size)) {
             pdfFiles.push(f);

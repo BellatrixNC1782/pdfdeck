@@ -10,7 +10,7 @@
 
     <!-- Upload -->
     <div class="flex justify-center mb-6">
-        <label for="inputFile"
+        <label id="dropZone" for="inputFile"
                class="cursor-pointer border-2 border-dashed border-gray-300 rounded-2xl px-10 py-8 flex flex-col items-center hover:border-blue-500 hover:bg-blue-50 transition">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-blue-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -43,17 +43,56 @@
 </div>
 
 <script>
+    
+    const dropZone = document.getElementById('dropZone');
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.add('border-blue-500', 'bg-blue-50');
+        }, false);
+    });
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.remove('border-blue-500', 'bg-blue-50');
+        }, false);
+    });
+    
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const droppedFiles = e.dataTransfer.files;
+        if (droppedFiles.length > 0) {
+            for (const file of droppedFiles) {
+                if (!file.name.toLowerCase().match(/\.(doc|docx)$/) && !file.type.includes('word')) {
+                    alert("Invalid file! Only Word files are allowed.");
+                    return; // Exit on first invalid file
+                }
+            }
+            inputFile.files = droppedFiles;
+            inputFile.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    });
+
+    
     const inputFile = document.getElementById('inputFile');
     const hiddenFile = document.getElementById('hiddenFile');
     const convertBtn = document.getElementById('convertBtn');
     const fileNameWrapper = document.getElementById('fileNameWrapper');
     const fileName = document.getElementById('fileName');
     const wordForm = document.getElementById('wordForm');
-
+    
     inputFile.addEventListener('change', (e) => {
         if (e.target.files.length > 0) {
             const file = e.target.files[0];
-
+            if (!file.name.toLowerCase().match(/\.(doc|docx)$/) && !file.type.includes('word')) {
+                alert("Invalid file! Only Word files are allowed.");
+                resetSelection();
+                return;
+            }
             // show selected file name
             fileName.textContent = file.name;
             fileNameWrapper.classList.remove('hidden');
@@ -68,6 +107,7 @@
             resetSelection();
         }
     });
+
 
     // reset selection function
     function resetSelection() {

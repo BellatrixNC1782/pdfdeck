@@ -10,7 +10,7 @@
 
     <!-- Upload -->
     <div class="flex justify-center mb-10">
-        <label for="fileInput"
+        <label id="dropZone" for="fileInput"
                class="cursor-pointer border-2 border-dashed border-gray-300 rounded-2xl px-10 py-8 flex flex-col items-center hover:border-sky-500 hover:bg-sky-50 transition">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-sky-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -25,10 +25,24 @@
 
     <!-- Password Inputs -->
     <div class="max-w-sm mx-auto mb-6 text-center">
-        <input type="password" id="password" placeholder="Type password"
-               class="w-full mb-3 border px-4 py-2 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500" required>
-        <input type="password" id="repeatPassword" placeholder="Repeat password"
-               class="w-full border px-4 py-2 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500" required>
+        
+        
+        <div class="relative w-full mb-3">
+          <input type="password" id="password" placeholder="Type password"
+                 class="w-full border px-4 py-2 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500 pr-10" required>
+          <button type="button" id="togglePassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700">
+            👁️
+          </button>
+        </div>
+
+        <div class="relative w-full">
+          <input type="password" id="repeatPassword" placeholder="Repeat password"
+                 class="w-full border px-4 py-2 rounded-lg shadow-sm focus:ring-2 focus:ring-sky-500 pr-10" required>
+          <button type="button" id="toggleRepeatPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700">
+            👁️
+          </button>
+        </div>
+        
         <div id="passwordError" class="text-red-600 text-sm hidden mt-2">Passwords do not match.</div>
     </div>
 
@@ -52,6 +66,69 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
 <script>
+    
+const dropZone = document.getElementById('dropZone');
+
+['dragenter', 'dragover'].forEach(eventName => {
+    dropZone.addEventListener(eventName, e => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.classList.add('border-sky-500', 'bg-sky-50');
+    });
+});
+
+['dragleave', 'drop'].forEach(eventName => {
+    dropZone.addEventListener(eventName, e => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.classList.remove('border-sky-500', 'bg-sky-50');
+    });
+});
+    
+dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const droppedFiles = e.dataTransfer.files;
+    if (droppedFiles.length > 0) {
+        for (const file of droppedFiles) {
+            if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+                alert("Invalid file! Only PDF files are allowed.");
+                return;
+            }
+        }
+        fileInput.files = droppedFiles;
+        fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+});
+    
+const passwordInput = document.getElementById('password');
+const repeatPasswordInput = document.getElementById('repeatPassword');
+const togglePasswordBtn = document.getElementById('togglePassword');
+const toggleRepeatPasswordBtn = document.getElementById('toggleRepeatPassword');
+
+togglePasswordBtn.addEventListener('click', () => {
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        togglePasswordBtn.textContent = '🙈';
+    } else {
+        passwordInput.type = 'password';
+        togglePasswordBtn.textContent = '👁️';
+    }
+});
+
+toggleRepeatPasswordBtn.addEventListener('click', () => {
+    if (repeatPasswordInput.type === 'password') {
+        repeatPasswordInput.type = 'text';
+        toggleRepeatPasswordBtn.textContent = '🙈';
+    } else {
+        repeatPasswordInput.type = 'password';
+        toggleRepeatPasswordBtn.textContent = '👁️';
+    }
+});
+
+
+    
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
 const fileInput = document.getElementById('fileInput');
@@ -74,6 +151,16 @@ function updateHiddenRotations() {
 }
 
 fileInput.addEventListener('change', (e) => {
+    
+    const filesArray = Array.from(e.target.files);
+    for (const file of filesArray) {
+        if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+            alert("Invalid file! Only PDF files are allowed.");
+            e.target.value = ''; // Reset input
+            return;
+        }
+    }
+    
     Array.from(e.target.files).forEach(f => {
         files.push(f);
         rotations.push(0);
@@ -176,7 +263,6 @@ function updateProtectButton() {
 
 protectForm.addEventListener('submit', function (e) {
     // Show loader immediately
-    document.getElementById("loaderOverlay").classList.remove("hidden");
     e.preventDefault();
 
     if (password.value !== repeatPassword.value || password.value.trim() === "") {
@@ -185,6 +271,8 @@ protectForm.addEventListener('submit', function (e) {
     } else {
         passwordError.classList.add('hidden');
     }
+    
+    document.getElementById("loaderOverlay").classList.remove("hidden");
 
     const dt = new DataTransfer();
     files.forEach(f => dt.items.add(f));

@@ -10,7 +10,7 @@
 
     <!-- Upload -->
     <div class="flex justify-center mb-10">
-        <label for="pdfInput"
+        <label id="dropZone" for="pdfInput"
                class="cursor-pointer border-2 border-dashed border-gray-300 rounded-2xl px-10 py-8 flex flex-col items-center hover:border-red-500 hover:bg-red-50 transition">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-red-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -54,18 +54,71 @@ pdfjsLib.GlobalWorkerOptions.workerSrc =
 </script>
 
 <script>
+    
+    
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('pdfInput');
+
+    // highlight on drag
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.add('border-red-500', 'bg-red-50');
+        }, false);
+    });
+
+    // remove highlight
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.remove('border-red-500', 'bg-red-50');
+        }, false);
+    });
+
+    // handle dropped files
+    
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        let droppedFiles = e.dataTransfer.files;
+        if (droppedFiles.length > 0) {
+            // Check all files - only accept PDFs
+            for (const f of droppedFiles) {
+                if (f.type !== 'application/pdf' && !f.name.toLowerCase().endsWith('.pdf')) {
+                    alert("Invalid file! Only PDF files are allowed.");
+                    return; // Exit on first invalid
+                }
+            }
+            fileInput.files = droppedFiles;
+            fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    });
+
+    
+    
+    
     let pdfDoc = null;
     let pageTotal = 0;
     let ranges = [];
     const thumbWrap = document.getElementById('thumbWrapper');
     const rangeList = document.getElementById('rangeList');
     const splitForm = document.getElementById('splitForm');
-    const fileInput = document.getElementById('pdfInput');
+//    const fileInput = document.getElementById('pdfInput');
     const fileInputHidden = document.getElementById('pdfInputHidden');
 
     fileInput.addEventListener('change', async (e) => {
+        if (!e.target.files.length) return;
+
         const file = e.target.files[0];
-        if (!file) return;
+
+        if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+            alert("Invalid file! Only PDF files are allowed.");
+            fileInput.value = ''; // Reset input
+            return;
+        }
 
         thumbWrap.innerHTML = 'Loading...';
 

@@ -4,6 +4,7 @@
         <meta charset="UTF-8">
         <title>MyPDF Tool</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="shortcut icon" href="{{ asset('public/favicon.ico') }}" type="image/x-icon">
         <script src="https://cdn.tailwindcss.com"></script>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
@@ -19,6 +20,8 @@
         
     </head>
     <body class="bg-gray-50 text-gray-800 flex flex-col min-h-screen">
+        
+        <?php $current_route = Route::currentRouteName();?>
 
         <!-- HEADER -->
         <!-- HEADER -->
@@ -26,10 +29,17 @@
             <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
 
                 <!-- Logo (Left) -->
+                @if($current_route != 'home')
                 <a href="{{ route('home') }}" class="text-2xl font-bold text-white flex items-center space-x-1 mr-8">
                     <span>❤️</span>
                     <span>MyPDF</span>
                 </a>
+                @else
+                <a class="text-2xl font-bold text-white flex items-center space-x-1 mr-8">
+                    <span>❤️</span>
+                    <span>MyPDF</span>
+                </a>
+                @endif
 
                 <!-- Desktop Nav (Right) -->
                 <nav class="hidden md:flex items-center space-x-6 text-white font-medium text-sm lg:text-base whitespace-nowrap">

@@ -11,7 +11,7 @@
 
     <!-- Upload -->
     <div class="flex justify-center mb-6">
-        <label for="excelInput"
+        <label id="dropZone" for="excelInput"
                class="cursor-pointer border-2 border-dashed border-gray-300 rounded-2xl px-10 py-8 flex flex-col items-center hover:border-green-500 hover:bg-green-50 transition">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-green-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -48,6 +48,46 @@
 </div>
 
 <script>
+    
+    
+    const dropZone = document.getElementById('dropZone');
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.add('border-green-500', 'bg-green-50');
+        }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.remove('border-green-500', 'bg-green-50');
+        }, false);
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const droppedFiles = e.dataTransfer.files;
+        if (droppedFiles.length > 0) {
+            for (const file of droppedFiles) {
+                if (!file.name.toLowerCase().match(/\.(xls|xlsx)$/) &&
+                    !file.type.includes('spreadsheet') &&
+                    !file.type.includes('excel')) {
+                    alert("Invalid file! Only Excel files are allowed.");
+                    return;
+                }
+            }
+            excelInput.files = droppedFiles;
+            excelInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    });
+
+    
+    
     const excelInput = document.getElementById('excelInput');
     const hiddenExcelFile = document.getElementById('hiddenExcelFile');
     const convertBtn = document.getElementById('convertBtn');
@@ -58,7 +98,13 @@
     excelInput.addEventListener('change', (e) => {
         if (e.target.files.length > 0) {
             const file = e.target.files[0];
-
+            if (!file.name.toLowerCase().match(/\.(xls|xlsx)$/) &&
+                !file.type.includes('spreadsheet') &&
+                !file.type.includes('excel')) {
+                alert("Invalid file! Only Excel files are allowed.");
+                resetSelection();
+                return;
+            }
             // show file name
             fileName.textContent = file.name;
             fileNameWrapper.classList.remove('hidden');

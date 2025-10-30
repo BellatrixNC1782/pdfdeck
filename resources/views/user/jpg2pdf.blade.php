@@ -10,7 +10,7 @@
 
     <!-- Upload -->
     <div class="flex justify-center mb-10">
-        <label for="imageInput"
+        <label id="dropZone" for="imageInput"
                class="cursor-pointer border-2 border-dashed border-gray-300 rounded-2xl px-10 py-8 flex flex-col items-center hover:border-gray-500 hover:bg-gray-50 transition">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -90,12 +90,60 @@
 </style>
 
 <script>
+    
+    
+    const dropZone = document.getElementById('dropZone');
+    const imageInput = document.getElementById('imageInput');
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.add('border-gray-500', 'bg-gray-50');
+        }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.remove('border-gray-500', 'bg-gray-50');
+        }, false);
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const droppedFiles = e.dataTransfer.files;
+        if (droppedFiles.length > 0) {
+            for (const file of droppedFiles) {
+                if (!file.type.startsWith('image/')) {
+                    alert("Invalid file! Only Image files are allowed.");
+                    return;
+                }
+            }
+            imageInput.files = droppedFiles;
+            imageInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    });
+
+    
+    
     let imagesData = [];
     let imageCounter = 0;
     let storedFiles = [];
 
     document.getElementById('imageInput').addEventListener('change', function (e) {
         const files = Array.from(e.target.files);
+        
+        for (const file of files) {
+            if (!file.type.startsWith('image/')) {
+                alert("Invalid file! Only Image files are allowed.");
+                this.value = ''; // Clear invalid selection
+                return;
+            }
+        }
 
         files.forEach((file) => {
             const reader = new FileReader();

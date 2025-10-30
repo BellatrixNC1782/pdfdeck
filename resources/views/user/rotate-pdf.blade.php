@@ -10,7 +10,7 @@
 
     <!-- Upload -->
     <div class="flex justify-center mb-10">
-        <label for="fileInput"
+        <label id="dropZone" for="fileInput"
                class="cursor-pointer border-2 border-dashed border-gray-300 rounded-2xl px-10 py-8 flex flex-col items-center hover:border-emerald-500 hover:bg-emerald-50 transition">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-emerald-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -42,6 +42,44 @@
 <!-- PDF.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
 <script>
+    
+    
+const dropZone = document.getElementById('dropZone');
+
+['dragenter', 'dragover'].forEach(eventName => {
+    dropZone.addEventListener(eventName, e => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.classList.add('border-emerald-500', 'bg-emerald-50');
+    });
+});
+
+['dragleave', 'drop'].forEach(eventName => {
+    dropZone.addEventListener(eventName, e => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.classList.remove('border-emerald-500', 'bg-emerald-50');
+    });
+});
+
+dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const droppedFiles = e.dataTransfer.files;
+    if (droppedFiles.length > 0) {
+        for (const file of droppedFiles) {
+            if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+                alert("Invalid file! Only PDF files are allowed.");
+                return;
+            }
+        }
+        fileInput.files = droppedFiles;
+        fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+});
+    
+
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
 const fileInput = document.getElementById('fileInput');
@@ -59,6 +97,17 @@ function updateHiddenRotations() {
 }
 
 fileInput.addEventListener('change', (e) => {
+    
+    const filesArray = Array.from(e.target.files);
+    for (const file of filesArray) {
+        if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+            alert("Invalid file! Only PDF files are allowed.");
+            // Reset input if invalid
+            e.target.value = '';
+            return;
+        }
+    }
+    
     Array.from(e.target.files).forEach(f => {
         files.push(f);
         rotations.push(0);
