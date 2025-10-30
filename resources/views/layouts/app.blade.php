@@ -141,7 +141,7 @@
                         <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                             <path d="M10 2a8 8 0 100 16 8 8 0 000-16zM8 14l6-6-1.414-1.414L8 11.172 6.414 9.586 5 11l3 3z"/>
                         </svg>
-                        <span>{{ (!empty($total_visitor)) ? number_format($total_visitor).'00' : 100 }} Visitors</span>
+                        <span>{{ (!empty($total_visitor)) ? number_format($total_visitor * 100) : 100 }} Visitors</span>
                     </p>
                     <p class="mt-3 text-sm">© {{ date('Y') }} MyPDF Tools. All Rights Reserved.</p>
                 </div>
